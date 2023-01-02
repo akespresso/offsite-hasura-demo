@@ -65,7 +65,8 @@ const DestinationSubmission = () => {
   const [destination, setDestination] = useState("");
   const [addDestination] = useMutation(ADD_DESTINATION_MUTATION);
 
-  const handleSubmit = () => {
+  const handleSubmit = (e: any) => {
+    e.preventDefault();
     addDestination({
       variables: {
         title: destination,
