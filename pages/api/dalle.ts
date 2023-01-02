@@ -17,7 +17,8 @@ export default async function handler(
 ) {
   const item = req.body.event.data.new;
   const { title, id } = item;
-  const prompt = `A photo of ${title.toLowerCase()}`;
+
+  const prompt = `An illustration of ${title.toLowerCase()}, hyperrealistic`;
   const image = await openai.createImage({
     prompt,
     n: 1,

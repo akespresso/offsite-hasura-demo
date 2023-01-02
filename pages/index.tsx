@@ -43,15 +43,11 @@ export default function Home() {
       </Head>
 
       <main className="lg:container lg:mx-auto px-8">
-        <div className="sticky top-0 bg-white/50 z-10 backdrop-blur-lg rounded-b-lg">
-          <h1 className="text-5xl py-8 font-extrabold text-center ">
-            Travel Ideas for 2023
-          </h1>
-        </div>
-
+        <Header />
         <DestinationSubmission />
 
         {loading && <Skeleton />}
+
         <div className="grid lg:grid-cols-4 grid-cols-1 gap-16">
           {data?.destinations.map((destination: any) => (
             <Card key={destination.id} {...destination} />
@@ -61,6 +57,14 @@ export default function Home() {
     </>
   );
 }
+
+const Header = () => (
+  <div className="sticky top-0 bg-white/50 z-10 backdrop-blur-lg rounded-b-lg">
+    <h1 className="text-5xl py-8 font-extrabold text-center ">
+      Travel Ideas for 2023
+    </h1>
+  </div>
+);
 
 const DestinationSubmission = () => {
   const [destination, setDestination] = useState("");
@@ -76,9 +80,12 @@ const DestinationSubmission = () => {
 
   return (
     <div className="my-16 flex items-center justify-center w-full">
-      <form className="flex space-x-2" onSubmit={handleSubmit}>
+      <form
+        className="flex lg:space-x-2 space-x-0 space-y-1 lg:space-y-0 lg:flex-row flex-col"
+        onSubmit={handleSubmit}
+      >
         <input
-          className="p-4 w-96 text-center text-3xl font-semibold border rounded"
+          className="p-4 lg:w-96 w-full text-center text-3xl font-semibold border rounded"
           type="text"
           value={destination}
           onChange={(e) => setDestination(e.target.value)}
@@ -106,6 +113,26 @@ const Card = (props: CardProps) => {
   const [addVote] = useMutation(VOTE_MUTATION);
   const handleVote = () => addVote({ variables: { id: props.id } });
 
+  const DestinationImage = () => {
+    if (!imageUrl) {
+      return (
+        <div className="grid place-items-center animate-pulse">
+          <span>Generating Image</span>
+        </div>
+      );
+    }
+
+    return (
+      <Image
+        src={imageUrl}
+        alt={title}
+        width={512}
+        height={512}
+        className="rounded-lg"
+      />
+    );
+  };
+
   return (
     <div>
       <div className="flex justify-between items-center pb-2">
@@ -121,19 +148,7 @@ const Card = (props: CardProps) => {
         </div>
       </div>
 
-      {imageUrl ? (
-        <Image
-          src={imageUrl}
-          alt={title}
-          width={512}
-          height={512}
-          className="rounded-lg"
-        />
-      ) : (
-        <div className="grid place-items-center animate-pulse">
-          <span>Generating Image</span>
-        </div>
-      )}
+      <DestinationImage />
     </div>
   );
 };
