@@ -1,7 +1,7 @@
 import { gql, useMutation, useSubscription } from "@apollo/client";
 import Head from "next/head";
 import Image from "next/image";
-import { useState } from "react";
+import { FormEvent, useState } from "react";
 
 const SUBSCRIPTION_QUERY = gql`
   subscription MySubscription {
@@ -31,7 +31,7 @@ const ADD_DESTINATION_MUTATION = gql`
 `;
 
 export default function Home() {
-  const { data, loading, error } = useSubscription(SUBSCRIPTION_QUERY);
+  const { data, loading } = useSubscription(SUBSCRIPTION_QUERY);
 
   return (
     <>
@@ -42,8 +42,8 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main className="container mx-auto">
-        <div className="sticky top-0 bg-white/50 z-10 backdrop-blur-lg rounded-lg">
+      <main className="lg:container lg:mx-auto px-8">
+        <div className="sticky top-0 bg-white/50 z-10 backdrop-blur-lg rounded-b-lg">
           <h1 className="text-5xl py-8 font-extrabold text-center ">
             Travel Ideas for 2023
           </h1>
@@ -51,6 +51,7 @@ export default function Home() {
 
         <DestinationSubmission />
 
+        {loading && <Skeleton />}
         <div className="grid lg:grid-cols-4 grid-cols-1 gap-16">
           {data?.destinations.map((destination: any) => (
             <Card key={destination.id} {...destination} />
@@ -65,13 +66,11 @@ const DestinationSubmission = () => {
   const [destination, setDestination] = useState("");
   const [addDestination] = useMutation(ADD_DESTINATION_MUTATION);
 
-  const handleSubmit = (e: any) => {
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    addDestination({
-      variables: {
-        title: destination,
-      },
-    });
+    const variables = { title: destination };
+
+    addDestination({ variables });
     setDestination("");
   };
 
@@ -125,7 +124,7 @@ const Card = (props: CardProps) => {
       {imageUrl ? (
         <Image
           src={imageUrl}
-          alt="Lake Tahoe"
+          alt={title}
           width={512}
           height={512}
           className="rounded-lg"
@@ -138,3 +137,24 @@ const Card = (props: CardProps) => {
     </div>
   );
 };
+
+const Skeleton = () => (
+  <div className="grid lg:grid-cols-4 grid-cols-1 gap-16 animate-pulse">
+    <div>
+      <div className="w-full h-12 bg-gray-100 mb-2 rounded"></div>
+      <div className="w-full aspect-square bg-gray-100 rounded-lg"></div>
+    </div>
+    <div>
+      <div className="w-full h-12 bg-gray-100 mb-2 rounded"></div>
+      <div className="w-full aspect-square bg-gray-100 rounded-lg"></div>
+    </div>
+    <div>
+      <div className="w-full h-12 bg-gray-100 mb-2 rounded"></div>
+      <div className="w-full aspect-square bg-gray-100 rounded-lg"></div>
+    </div>
+    <div>
+      <div className="w-full h-12 bg-gray-100 mb-2 rounded"></div>
+      <div className="w-full aspect-square bg-gray-100 rounded-lg"></div>
+    </div>
+  </div>
+);
