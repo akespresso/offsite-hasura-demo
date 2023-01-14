@@ -32,7 +32,7 @@ export const DestinationSubmissionForm = () => {
           type="text"
           value={destination}
           onChange={(e) => setDestination(e.target.value)}
-          placeholder="Where should I go?"
+          placeholder="Where should we go?"
         />
 
         <button type="submit" className="text-3xl">
