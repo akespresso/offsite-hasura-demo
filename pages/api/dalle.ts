@@ -1,49 +1,39 @@
 import { gql } from "@apollo/client";
-const cloudinary = require("cloudinary").v2;
-
+import cloudinary from "cloudinary";
 import type { NextApiRequest, NextApiResponse } from "next";
-import { Configuration, OpenAIApi } from "openai";
+import { Configuration, CreateImageRequest, OpenAIApi } from "openai";
 import client from "../../lib/client";
 
 type Data = { success: boolean };
 
-const configuration = new Configuration({ apiKey: process.env.DALLE_API_KEY });
-const openai = new OpenAIApi(configuration);
-
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+const openAIConfig = new Configuration({ apiKey: process.env.DALLE_API_KEY });
+const openai = new OpenAIApi(openAIConfig);
+cloudinary.v2.config({ secure: true });
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<Data>
 ) {
+  // Parse the JSON submitted from a Hasura trigger
   const item = req.body.event.data.new;
-  const { title, id } = item;
+  const { title, id } = item as { title: string; id: string };
 
-  const imageUrl = await generateImage(title);
-  const cloudinaryResponse = await cloudinary.v2.uploader.upload(imageUrl);
-  const url = cloudinaryResponse.url;
+  // Generate image based on submitted activity
+  const prompt = `A photo of ${title.toLowerCase()}`;
+  const dalleVars: CreateImageRequest = { prompt, n: 1, size: "512x512" };
+  const dalleResult = await openai.createImage(dalleVars);
+  const dalleUrl = dalleResult.data.data[0].url ?? "";
 
-  const response = await client.mutate({
-    mutation: ADD_IMAGE,
-    variables: { id, imageUrl: url },
-  });
+  // Upload image to cloudinary for permanent storage
+  const { url } = await cloudinary.v2.uploader.upload(dalleUrl);
+
+  // Prepare and send mutation to Hasura
+  const variables = { id, imageUrl: url };
+  const response = await client.mutate({ mutation: ADD_IMAGE, variables });
 
   const success = response?.errors != undefined;
   return res.status(200).json({ success });
 }
-
-const generateImage = async (title: string) => {
-  const prompt = `A photo of ${title.toLowerCase()}`;
-  const size = "512x512";
-  const n = 1;
-  const image = await openai.createImage({ prompt, n, size });
-
-  return image.data.data[0].url ?? "";
-};
 
 const ADD_IMAGE = gql`
   mutation AddImage($id: uuid!, $imageUrl: String!) {
